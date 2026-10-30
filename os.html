@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PuryWeb OS</title>
+<style>
+  :root {
+    --base: #0A0A0B; --card: #141416; --border: #27272A; --text: #FFFFFF; --muted: #A1A1AA;
+    --from: #FF6B35; --to: #7C3AED; --grad: linear-gradient(135deg, var(--from) 0%, var(--to) 100%);
+    --radius: 14px; color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--base); color: var(--text); font: 16px/1.6 Inter, 'Noto Sans Bengali', system-ui, sans-serif; min-height: 100vh; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto 0; height: 360px; pointer-events: none;
+    background: radial-gradient(60% 100% at 20% 0%, rgba(255,107,53,.14), transparent 70%),
+                radial-gradient(60% 100% at 85% 0%, rgba(124,58,237,.16), transparent 70%); }
+  .shell { position: relative; max-width: 1080px; margin: 0 auto; padding: 32px 24px 64px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 40px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand svg { transition: transform .5s cubic-bezier(.4,0,.2,1); }
+  .brand:hover svg { transform: rotate(180deg); }
+  .brand h1 { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+  .brand p { color: var(--muted); font-size: 14px; }
+  .btn { appearance: none; border: 1px solid var(--border); background: var(--card); color: var(--text);
+    padding: 10px 18px; border-radius: 10px; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; transition: border-color .2s, transform .2s; }
+  .btn:hover { border-color: #3F3F46; }
+  .btn:active { transform: scale(.98); }
+  .btn.primary { background: var(--grad); border-color: transparent; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  h2 { font-size: 30px; letter-spacing: -.02em; margin-bottom: 4px; }
+  .sub { color: var(--muted); margin-bottom: 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  .card h3 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+  .big { font-size: 48px; font-weight: 700; letter-spacing: -.03em; line-height: 1.1; }
+  .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .bar { height: 8px; border-radius: 99px; background: var(--border); overflow: hidden; margin: 18px 0 10px; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--grad); border-radius: 99px; transition: width .5s cubic-bezier(.2,.8,.2,1); }
+  .muted { color: var(--muted); font-size: 14px; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; border: 1px solid var(--border); }
+  .badge.pro { background: var(--grad); border-color: transparent; }
+  .row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  input[type=text] { flex: 1; min-width: 180px; background: var(--base); border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 11px 14px; font: inherit; font-size: 15px; letter-spacing: .04em; }
+  input[type=text]:focus { outline: none; border-color: var(--to); box-shadow: 0 0 0 3px rgba(124,58,237,.25); }
+  .msg { margin-top: 12px; font-size: 14px; min-height: 22px; }
+  .msg.ok { color: #4ADE80; } .msg.err { color: #F87171; }
+  .trust { margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 14px; }
+  .trust svg { flex: none; }
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="brand">
+      <span id="logo"></span>
+      <div>
+        <h1>PuryWeb</h1>
+        <p data-i18n="app.tagline"></p>
+      </div>
+    </div>
+    <button class="btn" id="langBtn" type="button"></button>
+  </header>
+
+  <main>
+    <h2 data-i18n="os.dashboard.title"></h2>
+    <p class="sub" data-i18n="os.dashboard.sub"></p>
+
+    <div class="grid">
+      <section class="card">
+        <h3 data-i18n="quota.today"></h3>
+        <div class="big grad-text" id="quotaBig">–</div>
+        <div class="bar"><i id="quotaBar"></i></div>
+        <div class="muted" id="quotaSub"></div>
+      </section>
+
+      <section class="card">
+        <h3 data-i18n="os.plan"></h3>
+        <span class="badge" id="planBadge"></span>
+        <div class="row">
+          <input type="text" id="licenseInput" maxlength="40" autocomplete="off" spellcheck="false" data-i18n-ph="os.license.placeholder" aria-label="License key">
+          <button class="btn primary" id="activateBtn" type="button" data-i18n="os.license.activate"></button>
+          <button class="btn hidden" id="deactivateBtn" type="button" data-i18n="os.license.deactivate"></button>
+        </div>
+        <div class="msg" id="licenseMsg" role="status"></div>
+      </section>
+
+      <section class="card">
+        <h3 data-i18n="os.stats.purified"></h3>
+        <div class="big" id="statPurified">0</div>
+        <div class="muted" style="margin-top:18px" data-i18n="os.stats.saved"></div>
+        <div class="big grad-text" id="statSaved" style="font-size:32px">0</div>
+      </section>
+    </div>
+
+    <div class="trust" id="trust">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+      <span><b data-i18n="trust.secure"></b> · <span data-i18n="trust.detail"></span></span>
+    </div>
+  </main>
+</div>
+<script type="module" src="os.boot.js"></script>
+</body>
+</html>

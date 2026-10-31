@@ -2,15 +2,17 @@
 // Entry point: toolbar click -> intent dialogue / paywall, quota messaging, badge, menus, alarms.
 
 import {
-  initStorage, getSettings, patchSettings, publicSettings, recordPurify, getRulesFor, onChange,
+  initStorage, getSettings, patchSettings, publicSettings, recordPurify, getRulesFor, onChange, storageGet, storageSet,
 } from '../shared/storage.js';
 import { getStatus, consume, refund, complete, FREE_DAILY_LIMIT, nextMidnight } from './quota.js';
 import { setActionIcon, spinIcon } from './icon-render.js';
 import { recycleSvg } from '../shared/icons.js';
 import { t } from '../shared/i18n.js';
+import { purify } from './purify-pipeline.js';
+import { testKey } from './ai/ai-router.js';
 
-// Flip to true once content/intent-modal.js ships (Phase 5).
-const FEATURES = { intentModal: false, paywallModal: false };
+// Intent modal + paywall ship in Phase 5; flip `renderer` when content/renderer.js ships (Phase 6).
+const FEATURES = { intentModal: true, paywallModal: true, renderer: false };
 
 const OS_URL = chrome.runtime.getURL('os/os.html');
 const RESTRICTED = /^(chrome|chrome-extension|edge|about|devtools|view-source|chrome-search|chrome-untrusted):/i;
@@ -177,6 +179,25 @@ const handlers = {
     const rules = await getRulesFor(String(m.host || ''));
     return { ok: true, rules: rules.map((r) => r.text) };
   },
+  async PW_GET_INTENTS() {
+    return { ok: true, items: await storageGet('local', 'intents', []) };
+  },
+  async PW_SAVE_INTENT(m) {
+    const text = String(m.text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!text) return { ok: true };
+    const list = (await storageGet('local', 'intents', [])).filter((x) => x !== text);
+    await storageSet('local', 'intents', [text, ...list].slice(0, 8));
+    return { ok: true };
+  },
+  async PW_PURIFY(m) {
+    const r = await purify(m);
+    refreshBadge().catch(() => {});
+    return r;
+  },
+  async PW_TEST_KEY(m, sender) {
+    if (!sender.url || !sender.url.startsWith(chrome.runtime.getURL(''))) return { ok: false, error: 'forbidden' };
+    return testKey(String(m.provider), String(m.key || ''), String(m.model || ''));
+  },
   async PW_OPEN_OS(m) {
     await openOS(String(m.hash || '').replace(/[^\w-]/g, ''));
     return { ok: true };
@@ -187,7 +208,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (sender.id !== chrome.runtime.id || !msg || typeof msg.type !== 'string') return false;
   const fn = handlers[msg.type];
   if (!fn) return false;
-  fn(msg)
+  fn(msg, sender)
     .then(sendResponse)
     .catch((e) => sendResponse({ ok: false, error: String(e?.message || e) }));
   return true; // async response

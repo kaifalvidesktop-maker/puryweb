@@ -1,0 +1,8 @@
+{
+  "name": "puryweb-build",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": { "css": "node build-css.mjs" },
+  "devDependencies": { "tailwindcss": "3.4.17" }
+}

@@ -18,9 +18,9 @@ function wrap(f, plan, control, t, { fieldset = false } = {}) {
   const req = f.required ? `<span class="ml-1 text-orange-600" aria-hidden="true">*</span><span class="sr-only"> ${esc(t('form.required'))}</span>` : '';
   const h = hint ? `<p id="pwh-${esc(f.id)}" class="mt-2 text-[16px] leading-7 text-zinc-500">${esc(hint)}</p>` : '';
   if (fieldset) {
-    return `<fieldset class="space-y-3" data-pw-wrap="${esc(f.id)}"><legend class="mb-1 text-[18px] font-semibold text-zinc-900">${esc(label)}${req}</legend>${control}${h}</fieldset>`;
+    return `<fieldset class="space-y-3" data-pw-wrap="${esc(f.id)}"${f.required ? ' data-pw-required' : ''}><legend class="mb-1 text-[18px] font-semibold text-zinc-900">${esc(label)}${req}</legend>${control}${h}</fieldset>`;
   }
-  return `<div data-pw-wrap="${esc(f.id)}"><label for="pwf-${esc(f.id)}" class="mb-2 block text-[18px] font-semibold text-zinc-900">${esc(label)}${req}</label>${control}${h}</div>`;
+  return `<div data-pw-wrap="${esc(f.id)}"${f.required ? ' data-pw-required' : ''}><label for="pwf-${esc(f.id)}" class="mb-2 block text-[18px] font-semibold text-zinc-900">${esc(label)}${req}</label>${control}${h}</div>`;
 }
 
 function describedBy(f, plan) {
@@ -58,7 +58,7 @@ function renderField(f, plan, t) {
     case 'select-multiple': {
       const multi = f.kind === 'select-multiple';
       const opts = (f.options || [])
-        .map((o, i) => `<option value="${i}"${o.selected ? ' selected' : ''}${o.disabled ? ' disabled' : ''}>${esc(o.label)}</option>`)
+        .map((o, i) => `<option value="${i}"${o.placeholder ? ' data-pw-ph' : ''}${o.selected ? ' selected' : ''}${o.disabled ? ' disabled' : ''}>${esc(o.label)}</option>`)
         .join('');
       return wrap(f, plan, `<select class="pw-input appearance-auto" ${multi ? 'multiple size="6"' : ''} ${common}>${opts}</select>`, t);
     }
@@ -75,7 +75,7 @@ function renderField(f, plan, t) {
     case 'checkbox': {
       const { label, hint } = labelOf(f, plan);
       const req = f.required ? '<span class="ml-1 text-orange-600" aria-hidden="true">*</span>' : '';
-      return `<div data-pw-wrap="${id}"><label class="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3.5 text-[18px] leading-8 text-zinc-800 has-[:checked]:border-violet-500 has-[:checked]:bg-violet-50"><input class="mt-2 h-5 w-5 accent-violet-600" type="checkbox" ${common}${f.checked ? ' checked' : ''}><span>${esc(label)}${req}</span></label>${hint ? `<p class="mt-2 text-[16px] text-zinc-500">${esc(hint)}</p>` : ''}</div>`;
+      return `<div data-pw-wrap="${id}"${f.required ? ' data-pw-required' : ''}><label class="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3.5 text-[18px] leading-8 text-zinc-800 has-[:checked]:border-violet-500 has-[:checked]:bg-violet-50"><input class="mt-2 h-5 w-5 accent-violet-600" type="checkbox" ${common}${f.checked ? ' checked' : ''}><span>${esc(label)}${req}</span></label>${hint ? `<p class="mt-2 text-[16px] text-zinc-500">${esc(hint)}</p>` : ''}</div>`;
     }
 
     case 'file':

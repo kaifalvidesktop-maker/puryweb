@@ -12,7 +12,7 @@ import { purify } from './purify-pipeline.js';
 import { testKey } from './ai/ai-router.js';
 
 // Intent modal + paywall ship in Phase 5; flip `renderer` when content/renderer.js ships (Phase 6).
-const FEATURES = { intentModal: true, paywallModal: true, renderer: false };
+const FEATURES = { intentModal: true, paywallModal: true, renderer: true, proxy: true };
 
 const OS_URL = chrome.runtime.getURL('os/os.html');
 const RESTRICTED = /^(chrome|chrome-extension|edge|about|devtools|view-source|chrome-search|chrome-untrusted):/i;
@@ -188,6 +188,35 @@ const handlers = {
     const list = (await storageGet('local', 'intents', [])).filter((x) => x !== text);
     await storageSet('local', 'intents', [text, ...list].slice(0, 8));
     return { ok: true };
+  },
+  async PW_RESUME_SAVE(m, sender) {
+    if (!sender.tab || !m.record || JSON.stringify(m.record).length > 150000) return { ok: false };
+    await chrome.storage.session.set({ ['pw:resume:' + sender.tab.id]: { ...m.record, ts: Date.now() } });
+    return { ok: true };
+  },
+  async PW_RESUME_TAKE(m, sender) {
+    if (!sender.tab) return { ok: false };
+    const key = 'pw:resume:' + sender.tab.id;
+    const rec = (await chrome.storage.session.get(key))[key];
+    if (!rec) return { ok: true, record: null };
+    await chrome.storage.session.remove(key);
+    if (Date.now() - rec.ts > 20000 || rec.path !== String(m.path || '')) return { ok: true, record: null };
+    const s = await getSettings();
+    return { ok: true, record: rec, ctx: { lang: s.lang, theme: s.theme, shuffle: s.shuffle, features: FEATURES, fallback: false, meta: {} } };
+  },
+  async PW_POSTBACK(m, sender) {
+    if (!sender.tab) return { ok: false, ran: false };
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId: sender.tab.id },
+      world: 'MAIN',
+      func: (target, arg) => {
+        if (typeof window.__doPostBack !== 'function') return false;
+        window.__doPostBack(target, arg);
+        return true;
+      },
+      args: [String(m.target || '').slice(0, 300), String(m.arg || '').slice(0, 300)],
+    });
+    return { ok: true, ran: !!(res && res.result) };
   },
   async PW_PURIFY(m) {
     const r = await purify(m);

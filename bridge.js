@@ -96,6 +96,22 @@
     return false;
   }
 
+  // After a postback reload (dependent dropdown etc.) rebuild the same purified UI with no AI call.
+  async function tryResume() {
+    try {
+      const r = await chrome.runtime.sendMessage({ type: 'PW_RESUME_TAKE', path: location.origin + location.pathname });
+      if (!r || !r.ok || !r.record) return;
+      const [pm, rn, px] = await Promise.all([loadModule('content/page-model.js'), loadModule('content/renderer.js'), loadModule('content/proxy-engine.js')]);
+      if (!pm || !rn || !px) return;
+      const result = pm.analyze({});
+      if (px.computeSig(result.model) !== r.record.sig) return;
+      await rn.render({ plan: r.record.plan, model: result.model, step: r.record.step, ...r.ctx });
+    } catch (e) {
+      /* resume is best effort */
+    }
+  }
+  tryResume();
+
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (sender.id !== chrome.runtime.id || !msg || typeof msg.type !== 'string') return false;
     switch (msg.type) {

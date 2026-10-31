@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PuryWeb",
   "short_name": "PuryWeb",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "description": "PuryWeb — AI Internet Purifier. Make any website clean, focused and trustworthy.",
   "minimum_chrome_version": "116",
   "action": {
@@ -12,16 +12,26 @@
     "service_worker": "background/service-worker.js",
     "type": "module"
   },
-  "permissions": ["storage", "activeTab", "scripting", "alarms", "contextMenus"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "alarms",
+    "contextMenus"
+  ],
   "host_permissions": [
-    "https://generativelanguage.googleapis.com/*",
-    "https://api.openai.com/*",
-    "https://api.anthropic.com/*"
+    "http://*/*",
+    "https://*/*"
   ],
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["content/bridge.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content/bridge.js"
+      ],
       "run_at": "document_idle",
       "all_frames": false
     }
@@ -29,14 +39,25 @@
   "options_page": "os/os.html",
   "commands": {
     "_execute_action": {
-      "suggested_key": { "default": "Alt+P", "mac": "Alt+P" },
+      "suggested_key": {
+        "default": "Alt+P",
+        "mac": "Alt+P"
+      },
       "description": "Purify this page"
     }
   },
   "web_accessible_resources": [
     {
-      "resources": ["shared/*.js", "content/*.js", "templates/*.js", "prompts/*.js"],
-      "matches": ["http://*/*", "https://*/*"]
+      "resources": [
+        "shared/*.js",
+        "content/*.js",
+        "templates/*.js",
+        "prompts/*.js"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
     }
   ],
   "content_security_policy": {

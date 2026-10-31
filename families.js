@@ -123,7 +123,7 @@ export const FAMILIES = {
     const ctx = makeCtx(args);
     const { plan, cfg, t, model } = args;
     const big = plan.highlights.length
-      ? `<div class="my-8 grid gap-4 sm:grid-cols-${Math.min(3, plan.highlights.length) === 1 ? '1' : '2'}">${plan.highlights.map((h) => `<div class="pw-card border border-zinc-200 p-7 text-center"><div class="text-[15px] font-semibold uppercase tracking-wider text-zinc-500">${esc(h.label)}</div><div class="pw-grad-text mt-2 text-[40px] font-extrabold leading-tight">${esc(h.value)}</div></div>`).join('')}</div>`
+      ? `<div class="my-8 grid gap-4 ${plan.highlights.length === 1 ? 'sm:grid-cols-1' : 'sm:grid-cols-2'}">${plan.highlights.map((h) => `<div class="pw-card border border-zinc-200 p-7 text-center"><div class="text-[15px] font-semibold uppercase tracking-wider text-zinc-500">${esc(h.label)}</div><div class="pw-grad-text mt-2 text-[40px] font-extrabold leading-tight">${esc(h.value)}</div></div>`).join('')}</div>`
       : '';
     return `${titleBlock(args, { byline: false })}${renderSummary(plan.summary, cfg.tone)}${big}${renderWarnings(plan.warnings, t)}${model.forms.map((f) => renderForm(f, plan, t)).join('')}${sectionsHtml(args, ctx, { skip: (b) => b && b.type === 'form' })}`;
   },
